@@ -13,6 +13,7 @@ import {
   getDoc,
   addDoc,
   getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 
 import { Textarea } from "../../components/textarea";
@@ -64,11 +65,24 @@ export default function Task({ item, allComments }: TaskProps) {
         comment: input,
         user: session?.user?.email,
         name: session?.user?.name,
-        taskId: item?.taskId
+        taskId: item?.taskId,
       };
 
-     setComments((oldItems) => [...oldItems, data])
+      setComments((oldItems) => [...oldItems, data]);
       setInput("");
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async function handleDeleteComment(id: string) {
+    try {
+      const docRef = doc(db, "comments", id);
+      await deleteDoc(docRef);
+
+      const deletComment = comments.filter((item) => item.id !== id);
+
+      setComments(deletComment);
     } catch (err) {
       console.log(err);
     }
@@ -114,11 +128,14 @@ export default function Task({ item, allComments }: TaskProps) {
           <article key={item.id} className={styles.comment}>
             <div className={styles.headComment}>
               <label className={styles.commentsLabel}>{item.name}</label>
-             {item.user === session?.user?.email&&(
-               <button className={styles.buttonTrash}>
-               <FaTrash size={18} color="#EA3140"/>
-             </button>
-             )}
+              {item.user === session?.user?.email && (
+                <button
+                  className={styles.buttonTrash}
+                  onClick={() => handleDeleteComment(item.id)}
+                >
+                  <FaTrash size={18} color="#EA3140" />
+                </button>
+              )}
             </div>
             <p>{item.comment}</p>
           </article>
